@@ -1,5 +1,7 @@
 from django.contrib.auth.models import User
+from .models import ChatHistory
 from rest_framework import serializers
+
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True, style={'input_type': 'password'})
@@ -22,3 +24,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'first_name', 'last_name')
+
+
+class ChatHistorySerizlizer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatHistory
+        fields = ("content","user")
+

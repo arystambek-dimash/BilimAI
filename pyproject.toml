@@ -10,6 +10,14 @@ python = "^3.10"
 django = "^4.2.4"
 djangorestframework = "^3.14.0"
 djoser = "^2.2.0"
+langchain = "^0.0.270"
+openai = "^0.27.8"
+chromadb = "^0.4.6"
+jq = "^1.4.1"
+pinecone-client = "^2.2.2"
+tiktoken = "^0.4.0"
+nest-asyncio = "^1.5.7"
+bs4 = "^0.0.1"
 
 
 [build-system]
