@@ -4,7 +4,8 @@ from rest_framework import generics
 from . import models
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .serializers import UserRegistrationSerializer, UserProfileSerializer, ChatHistorySerizlizer
+from .serializers import UserRegistrationSerializer, UserProfileSerializer, ChatHistorySerizlizer, \
+    ChatHistorySerizlizerGET
 from gpt_config import chat_query
 import translators as ts
 
@@ -45,11 +46,11 @@ class ChatQueryView(generics.CreateAPIView):
 
 class ChatHistoryAll(generics.ListAPIView):
     queryset = models.ChatHistory.objects.all()
-    serializer_class = ChatHistorySerizlizer
+    serializer_class = ChatHistorySerizlizerGET
     permission_classes([IsAuthenticated])
 
 
 class ChatHistoryDetailDelete(generics.RetrieveDestroyAPIView):
     queryset = models.ChatHistory.objects.all()
-    serializer_class = ChatHistorySerizlizer
+    serializer_class = ChatHistorySerizlizerGET
     permission_classes([IsAuthenticated])
