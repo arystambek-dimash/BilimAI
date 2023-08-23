@@ -30,4 +30,3 @@ class ChatHistorySerizlizer(serializers.ModelSerializer):
     class Meta:
         model = ChatHistory
         fields = "__all__"
-
