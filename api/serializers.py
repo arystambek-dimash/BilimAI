@@ -29,5 +29,5 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class ChatHistorySerizlizer(serializers.ModelSerializer):
     class Meta:
         model = ChatHistory
-        fields = ("content","user")
+        fields = "__all__"
 
