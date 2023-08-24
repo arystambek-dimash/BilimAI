@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from .models import ChatHistory
+from .models import ChatHistory, Test
 from rest_framework import serializers
 
 
@@ -16,8 +16,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        validated_data.pop('password2')
-        return super(UserRegistrationSerializer, self).create(validated_data)
+        password = validated_data.pop('password')
+        password2 = validated_data.pop('password2')
+        user = super(UserRegistrationSerializer, self).create(validated_data)
+        user.set_password(password)
+        user.save()
+        return user
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -36,3 +40,17 @@ class ChatHistorySerizlizerGET(serializers.ModelSerializer):
     class Meta:
         model = ChatHistory
         fields = "__all__"
+
+
+
+class TestSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Test
+        fields = ("id","content","created_date")
+
+class TestSerializerGET(serializers.ModelSerializer):
+    class Meta:
+        model = Test
+        fields = "__all__"
+
