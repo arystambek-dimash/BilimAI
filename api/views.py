@@ -44,8 +44,7 @@ class ChatQueryView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         user_query = request.data.get('content')
-        res = ts.translate_text(user_query, to_language='en')
-        gpt_response = chat_query(res)
+        gpt_response = chat_query(user_query)
         chat_history = models.ChatHistory(content=user_query, chat_answer=gpt_response, user=request.user)
         chat_history.save()
 

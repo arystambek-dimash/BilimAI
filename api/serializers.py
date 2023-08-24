@@ -33,7 +33,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class ChatHistorySerizlizer(serializers.ModelSerializer):
     class Meta:
         model = ChatHistory
-        fields = ("id","content","created_date","user")
+        fields = ("id","content","created_date")
 
 
 class ChatHistorySerizlizerGET(serializers.ModelSerializer):
