@@ -47,3 +47,4 @@ def chat_query(question: str):
 
     response = qa(question[0].content)
     return response["result"]
+
