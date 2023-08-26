@@ -79,21 +79,31 @@ class TestCreateView(generics.CreateAPIView):
     serializer_class = TestSerializer
 
     def create(self, request, *args, **kwargs):
-        data = request.data
-        my_text = data.get('my_text')
+        my_text = request.data.get('my_text')
+        if my_text is None:
+            return Response({'error': 'my_text is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        question_title = Test.objects.create(my_text=my_text)
+
         questions = test_query(my_text)
+        print(questions)
+        if questions is None or not isinstance(questions, list):
+            return Response({'error': 'Invalid questions data'}, status=status.HTTP_400_BAD_REQUEST)
 
-        formatted_data = {
-            "my_text": my_text,
-            "questions": questions
-        }
+        for ques in questions:
+            question = ques.get("question")
+            options = ques.get("options")
+            a = options.get("A")
+            b = options.get("B")
+            c = options.get("C")
+            d = options.get("D")
+            correct_answer = ques.get("correct_answer")
 
-        # print(formatted_data)
+            q = Question.objects.create(test=question_title, text=question)
+            opt = QuestionOption.objects.create(question=q, text=a,is_correct=True)
+            opt1 = QuestionOption.objects.create(question=q, text=b)
+            opt2 = QuestionOption.objects.create(question=q, text=c)
+            opt3 = QuestionOption.objects.create(question=q, text=d)
 
-        serializer = self.get_serializer(data=formatted_data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
+        serializer = TestSerializer(question_title)
+        return Response(serializer.data)
