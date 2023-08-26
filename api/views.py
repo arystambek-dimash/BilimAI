@@ -11,11 +11,13 @@ from gpt_config import chat_query
 import translators as ts
 
 
-from rest_framework import generics
-from rest_framework.response import Response
-# from .models import Test, Question, QuestionOption
 from .serializers import TestSerializer
 from gpt_test_config import test_query
+
+from rest_framework import status
+from .models import Test, Question, QuestionOption
+
+
 
 class UserRegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -71,22 +73,27 @@ class ChatHistoryDetailDelete(generics.RetrieveDestroyAPIView):
 
 
 
+
 class TestCreateView(generics.CreateAPIView):
-    queryset = models.Test.objects.all()
+    queryset = Test.objects.all()
     serializer_class = TestSerializer
-    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
-        user_content = request.data.get('content')
-        gpt_response = test_query(user_content)
-        test = models.Test(content=user_content, questions=gpt_response, user=request.user)
-        test.save()
+        data = request.data
+        my_text = data.get('my_text')
+        questions = test_query(my_text)
 
-        serializer = TestSerializer(test)
+        formatted_data = {
+            "my_text": my_text,
+            "questions": questions
+        }
 
-        return Response({
-            "serializer": serializer.data,
-            "questions": gpt_response
-        })
+        # print(formatted_data)
 
+        serializer = self.get_serializer(data=formatted_data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 

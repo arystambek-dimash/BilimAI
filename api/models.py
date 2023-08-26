@@ -11,14 +11,16 @@ class ChatHistory(models.Model):
     def __str__(self):
         return self.content
 
+
 class Test(models.Model):
-    content = models.TextField()
-    questions = models.TextField()
-    created_date = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    my_text = models.TextField()
 
-    def __str__(self):
-        return self.content
+class Question(models.Model):
+    test = models.ForeignKey(Test, related_name='questions', on_delete=models.CASCADE)
+    text = models.TextField()
 
-
+class QuestionOption(models.Model):
+    question = models.ForeignKey(Question, related_name='options', on_delete=models.CASCADE)
+    text = models.CharField(max_length=255)
+    is_correct = models.BooleanField(default=False)
 

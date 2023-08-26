@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from .models import ChatHistory, Test
+from .models import ChatHistory, Test, Question, QuestionOption
 from rest_framework import serializers
 
 
@@ -43,14 +43,42 @@ class ChatHistorySerizlizerGET(serializers.ModelSerializer):
 
 
 
+
+class QuestionOptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuestionOption
+        fields = ['text', 'is_correct']
+
+
+class QuestionSerializer(serializers.ModelSerializer):
+    options = QuestionOptionSerializer(many=True)
+
+    class Meta:
+        model = Question
+        fields = ['text', 'options']
+
+    def create(self, validated_data):
+        options_data = validated_data.pop('options')
+        question = Question.objects.create(**validated_data)
+        for option_data in options_data:
+            QuestionOption.objects.create(question=question, **option_data)
+        return question
+
+
+
 class TestSerializer(serializers.ModelSerializer):
+    questions = QuestionSerializer(many=True)
 
     class Meta:
         model = Test
-        fields = ("id","content","created_date")
+        fields = ['my_text', 'questions']
 
-class TestSerializerGET(serializers.ModelSerializer):
-    class Meta:
-        model = Test
-        fields = "__all__"
+    def create(self, validated_data):
+        questions_data = validated_data.pop('questions')
+        test = Test.objects.create(**validated_data)
 
+        for question_data in questions_data:
+            # print(question_data)
+            Question.objects.create(test=test, **question_data)
+
+        return test
