@@ -21,3 +21,7 @@ __Launch Django-application.__
 > or
 > python3
 ***
+
+# Project urls
+> https://docs.google.com/document/d/1e58WZO-eDam1U5WiRLcy2j4gV-TWIMl4LNfaeiJqidA/edit?usp=sharing
+***

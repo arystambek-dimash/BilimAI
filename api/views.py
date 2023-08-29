@@ -1,24 +1,25 @@
+import os
+import secrets
+
+import django_filters
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import permission_classes
 from rest_framework import generics
-from . import models
+from . import models, filter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .serializers import UserRegistrationSerializer, UserProfileSerializer, ChatHistorySerizlizer, \
-    ChatHistorySerizlizerGET
+    ChatHistorySerizlizerGET, CourseSerializer, CourseVideoSerializer, VideoMaterialSerializer, TestSerializer
 from gpt_config import chat_query
-import translators as ts
-
-
-from .serializers import TestSerializer
 from gpt_test_config import test_query
-
-from rest_framework import status
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status, filters
 from .models import Test, Question, QuestionOption
+from rest_framework.parsers import MultiPartParser, FormParser
 
 
-
+############################### USER ###########################################
 class UserRegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserRegistrationSerializer
@@ -39,6 +40,7 @@ class UserProfileView(generics.RetrieveAPIView):
         return self.request.user
 
 
+############################ CHAT ######################################
 class ChatQueryView(generics.CreateAPIView):
     queryset = models.ChatHistory.objects.all()
     serializer_class = ChatHistorySerizlizer
@@ -58,12 +60,19 @@ class ChatQueryView(generics.CreateAPIView):
         })
 
 
-
-
 class ChatHistoryAll(generics.ListAPIView):
     queryset = models.ChatHistory.objects.all()
     serializer_class = ChatHistorySerizlizerGET
     permission_classes([IsAuthenticated])
+
+    def list(self, request, *args, **kwargs):
+        user = self.request.user
+        if user.is_authenticated:
+            queryset = models.ChatHistory.objects.filter(user=user)
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+        else:
+            return Response({"USER": "UNAUTHORIZED"}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class ChatHistoryDetailDelete(generics.RetrieveDestroyAPIView):
@@ -71,9 +80,19 @@ class ChatHistoryDetailDelete(generics.RetrieveDestroyAPIView):
     serializer_class = ChatHistorySerizlizerGET
     permission_classes([IsAuthenticated])
 
+    def get_object(self):
+        pk = self.kwargs.get('pk')
+        try:
+            chat_history = self.queryset.get(pk=pk)
+            if self.request.user == chat_history.user:
+                return chat_history
+            else:
+                return
+        except models.ChatHistory.DoesNotExist:
+            return
 
 
-
+############################### TEST ###########################################
 class TestCreateView(generics.CreateAPIView):
     queryset = Test.objects.all()
     serializer_class = TestSerializer
@@ -100,10 +119,100 @@ class TestCreateView(generics.CreateAPIView):
             correct_answer = ques.get("correct_answer")
 
             q = Question.objects.create(test=question_title, text=question)
-            opt = QuestionOption.objects.create(question=q, text=a,is_correct=True)
+            opt = QuestionOption.objects.create(question=q, text=a, is_correct=True)
             opt1 = QuestionOption.objects.create(question=q, text=b)
             opt2 = QuestionOption.objects.create(question=q, text=c)
             opt3 = QuestionOption.objects.create(question=q, text=d)
 
         serializer = TestSerializer(question_title)
         return Response(serializer.data)
+
+
+############################### COURSE ###########################################
+class CoursesListView(generics.ListAPIView):
+    queryset = models.Course.objects.all()
+    serializer_class = CourseSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, django_filters.rest_framework.DjangoFilterBackend]
+    search_fields = ["name"]
+    ordering_fields = ["price", "name"]
+    filter_class = filter.CourseFilter
+
+    def get_queryset(self):
+        queryset = models.Course.objects.all()
+        choices_param = self.request.query_params.get('category')
+        if choices_param:
+            category = str(choices_param).lower().capitalize()
+            queryset = queryset.filter(category=category)
+
+        return queryset
+
+
+class CourseQueryView(generics.CreateAPIView):
+    queryset = models.Course.objects.all()
+    serializer_class = CourseSerializer
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        serializer = CourseSerializer(data=request.data)
+        if serializer.is_valid():
+            image = request.data.get("img")
+            if image:
+                image_name = f"{secrets.token_hex(10)}.{image.name.split('.')[-1]}"
+                image_path = os.path.join("media/images", image_name)
+                with open(image_path, "wb") as image_file:
+                    for chunk in image.chunks():
+                        image_file.write(chunk)
+                serializer.validated_data["img"] = image_path.replace("media/", "")
+            if request.data["choices"] == "Free":
+                serializer.validated_data["price"] = 0
+            serializer.save(user=request.user)
+        return Response({"serializer": serializer.data, "user": request.user.username})
+
+
+class CourseDeleteView(generics.RetrieveDestroyAPIView):
+    queryset = models.Course.objects.all()
+    serializer_class = CourseSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        pk = self.kwargs.get("pk")
+        try:
+            course = self.queryset.get(pk=pk)
+            if self.request.user == course.user:
+                course.delete()
+                return course
+        except models.Course.DoesNotExist:
+            return
+
+
+############################### COURSE_VIDEO ###########################################
+class CourseVideosView(generics.ListAPIView):
+    serializer_class = CourseVideoSerializer
+
+    def get_queryset(self):
+        course_id = self.kwargs.get("pk")
+        queryset = models.CourseVideo.objects.filter(course=course_id)
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class CourseVideoQueryView(generics.CreateAPIView):
+    queryset = models.VideoMaterial.objects.all()
+    serializer_class = CourseVideoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        course_id = kwargs.get("pk")
+        course = models.Course.objects.get(pk=course_id)
+        if course and course.user == request.user:
+            serializer = CourseVideoSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(course=course)
+                return Response(serializer.data)
+            return Response({"valid contains": 'MOV,avi,mp4,webm,mkv'}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response("You don't have a course with this ID")
