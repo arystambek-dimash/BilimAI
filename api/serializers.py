@@ -79,7 +79,7 @@ class CourseVideoSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
-    course_videos = CourseVideoSerializer(many=True)
+    course_videos = CourseVideoSerializer(many=True,read_only=True)
 
     class Meta:
         model = Course
