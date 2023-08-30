@@ -61,3 +61,12 @@ class VideoMaterial(models.Model):
     file = models.FileField(upload_to="materials/", null=True,
                             validators=[FileExtensionValidator(allowed_extensions=["txt", "pdf", "docs"])])
     course_video = models.ForeignKey(CourseVideo, on_delete=models.CASCADE)
+
+
+
+class FavoriteCourse(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('user', 'course',)

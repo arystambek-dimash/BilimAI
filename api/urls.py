@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import TestCreateView
+from .views import TestCreateView, FavoriteCourseView
 
 app_name = "api"
 
@@ -21,4 +21,6 @@ urlpatterns = [
     path("courses/<int:pk>/videos/<int:video_id>/", views.CourseVideoDetail.as_view()),
     path("courses/<int:pk>/videos/<int:video_id>/delete/",views.CourseVideoDeleteView.as_view()),
     path("courses/<int:pk>/videos/<int:video_id>/update/", views.CourseVideoUpdateView.as_view()),
+    path('favorites/', FavoriteCourseView.as_view(), name='favorite-course-list'),
+
 ]

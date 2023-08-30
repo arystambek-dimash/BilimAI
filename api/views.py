@@ -11,11 +11,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .serializers import UserRegistrationSerializer, UserProfileSerializer, ChatHistorySerizlizer, \
     ChatHistorySerizlizerGET, CourseSerializer, CourseVideoSerializer, VideoMaterialSerializer, TestSerializer, TestSerializerGET,\
-    CourseSerializerGET
+    CourseSerializerGET, FavoriteCourseSerializer, FavoriteCourseSerializerGET
 from gpt_config import chat_query
 from gpt_test_config import test_query
 from rest_framework import status, filters
-from .models import Test, Question, QuestionOption
+from .models import Test, Question, QuestionOption, FavoriteCourse
 from django.contrib.auth.models import Group
 from django.shortcuts import reverse
 
@@ -358,3 +358,35 @@ class CourseVideoUpdateView(generics.RetrieveUpdateAPIView):
                 serializer.save()
                 return Response(serializer.data)
         return Response("You don't have permission to update this video.", status=status.HTTP_403_FORBIDDEN)
+
+############################### FAVORITE COURSES ###########################################
+
+class FavoriteCourseView(generics.ListCreateAPIView):
+    queryset = FavoriteCourse.objects.all()
+    serializer_class = FavoriteCourseSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return FavoriteCourse.objects.filter(user=user)
+    def perform_create(self, serializer):
+        user = self.request.user
+        course_id = self.request.data.get('course')
+        is_favorite = FavoriteCourse.objects.filter(user=user, course=course_id).exists()
+
+        if is_favorite:
+            return None
+        serializer.save(user=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        if serializer.instance is None:
+            return Response({'message': 'This course is already added to favorites'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+

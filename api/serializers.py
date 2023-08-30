@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from .models import ChatHistory, Test, Question, QuestionOption, Course, CourseVideo, VideoMaterial
+from .models import ChatHistory, Test, Question, QuestionOption, Course, CourseVideo, VideoMaterial, FavoriteCourse
 from rest_framework import serializers
 
 
@@ -97,4 +97,17 @@ class CourseSerializerGET(serializers.ModelSerializer):
 
     class Meta:
         model = Course
+        fields = "__all__"
+
+class FavoriteCourseSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = FavoriteCourse
+        fields = ['id', 'course']
+
+
+class FavoriteCourseSerializerGET(serializers.ModelSerializer):
+
+    class Meta:
+        model = FavoriteCourse
         fields = "__all__"
