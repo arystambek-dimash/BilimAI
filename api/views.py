@@ -273,7 +273,7 @@ class CourseVideosView(generics.ListAPIView):
 
 
 class CourseVideoQueryView(generics.CreateAPIView):
-    queryset = models.VideoMaterial.objects.all()
+    queryset = models.CourseVideo.objects.all()
     serializer_class = CourseVideoSerializer
     permission_classes = [IsAuthenticated]
 
