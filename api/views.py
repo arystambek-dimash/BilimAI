@@ -211,8 +211,29 @@ class CourseVideoQueryView(generics.CreateAPIView):
         if course and course.user == request.user:
             serializer = CourseVideoSerializer(data=request.data)
             if serializer.is_valid():
+                content = request.data.get("content")
+                content_name = f"{secrets.token_hex(5)}.{content.name.split('.')[-1]}"
+                content_path = os.path.join("media/videos", content_name)
+                with open(content_path, "wb") as content_file:
+                    for chunk in content.chunks():
+                        content_file.write(chunk)
+                serializer.validated_data["content"] = content_path.replace("media/", "")
                 serializer.save(course=course)
                 return Response(serializer.data)
             return Response({"valid contains": 'MOV,avi,mp4,webm,mkv'}, status=status.HTTP_403_FORBIDDEN)
         else:
             return Response("You don't have a course with this ID")
+
+
+class CourseVideoDetail(generics.RetrieveAPIView):
+    serializer_class = CourseVideoSerializer
+
+    def get_object(self):
+        course_id = self.kwargs.get("pk")
+        video_id = self.kwargs.get("video_id")
+        try:
+            instance_course = models.Course.objects.get(pk=course_id)
+            instance_video = models.CourseVideo.objects.get(pk=video_id, course_id=course_id)
+            return instance_video
+        except models.Course.DoesNotExist or models.CourseVideo.DoesNotExist:
+            return None

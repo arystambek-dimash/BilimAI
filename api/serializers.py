@@ -71,18 +71,16 @@ class VideoMaterialSerializer(serializers.ModelSerializer):
 
 
 class CourseVideoSerializer(serializers.ModelSerializer):
-    course_video = VideoMaterialSerializer(many=True,read_only=True)
+    course_video = VideoMaterialSerializer(many=True, read_only=True)
 
     class Meta:
         model = CourseVideo
-        fields = ["id","name","content","date_uploaded","course_video"]
+        fields = ["id", "name", "content", "date_uploaded", "course_video"]
 
 
 class CourseSerializer(serializers.ModelSerializer):
-    course_videos = CourseVideoSerializer(many=True,read_only=True)
+    course_videos = CourseVideoSerializer(many=True, read_only=True)
 
     class Meta:
         model = Course
-        fields = ["id","img","name","description","category","price","course_videos"]
-
-
+        fields = ["id", "img", "name", "description", "category", "price", "course_videos"]
