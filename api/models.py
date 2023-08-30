@@ -20,7 +20,9 @@ class ChatHistory(models.Model):
 
 class Test(models.Model):
     my_text = models.TextField()
+    created_date = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+
 
 
 class Question(models.Model):

@@ -10,7 +10,7 @@ from . import models, filter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .serializers import UserRegistrationSerializer, UserProfileSerializer, ChatHistorySerizlizer, \
-    ChatHistorySerizlizerGET, CourseSerializer, CourseVideoSerializer, VideoMaterialSerializer, TestSerializer
+    ChatHistorySerizlizerGET, CourseSerializer, CourseVideoSerializer, VideoMaterialSerializer, TestSerializer, TestSerializerGET
 from gpt_config import chat_query
 from gpt_test_config import test_query
 from django_filters.rest_framework import DjangoFilterBackend
@@ -128,6 +128,18 @@ class TestCreateView(generics.CreateAPIView):
 
         serializer = TestSerializer(question_title)
         return Response(serializer.data)
+
+
+class TestAll(generics.ListAPIView):
+    serializer_class = TestSerializerGET
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Test.objects.filter(user=self.request.user)
+
+
+
+
 
 
 ############################### COURSE ###########################################
