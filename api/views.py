@@ -96,13 +96,15 @@ class ChatHistoryDetailDelete(generics.RetrieveDestroyAPIView):
 class TestCreateView(generics.CreateAPIView):
     queryset = Test.objects.all()
     serializer_class = TestSerializer
+    permission_classes = [IsAuthenticated]
+
 
     def create(self, request, *args, **kwargs):
         my_text = request.data.get('my_text')
         if my_text is None:
             return Response({'error': 'my_text is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        question_title = Test.objects.create(my_text=my_text)
+        question_title = Test.objects.create(my_text=my_text, user=request.user)
 
         questions = test_query(my_text)
         print(questions)

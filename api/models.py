@@ -20,6 +20,7 @@ class ChatHistory(models.Model):
 
 class Test(models.Model):
     my_text = models.TextField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
 class Question(models.Model):
