@@ -16,7 +16,8 @@ from gpt_test_config import test_query
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, filters
 from .models import Test, Question, QuestionOption
-from rest_framework.parsers import MultiPartParser, FormParser
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
 
 
 ############################### USER ###########################################
@@ -105,7 +106,6 @@ class TestCreateView(generics.CreateAPIView):
         question_title = Test.objects.create(my_text=my_text)
 
         questions = test_query(my_text)
-        print(questions)
         if questions is None or not isinstance(questions, list):
             return Response({'error': 'Invalid questions data'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -163,8 +163,16 @@ class CourseQueryView(generics.CreateAPIView):
                     for chunk in image.chunks():
                         image_file.write(chunk)
                 serializer.validated_data["img"] = image_path.replace("media/", "")
-            if request.data["choices"] == "Free":
+            category = request.data.get("category")
+            if category == "Free":
                 serializer.validated_data["price"] = 0
+            if category == "Paid":
+                group_name = serializer.validated_data.get("name")
+                try:
+                    existing_group = Group.objects.get(name=group_name)
+                except Group.DoesNotExist:
+                    new_group = Group(name=group_name)
+                    new_group.save()
             serializer.save(user=request.user)
         return Response({"serializer": serializer.data, "user": request.user.username})
 
@@ -197,7 +205,16 @@ class CourseVideosView(generics.ListAPIView):
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        custom_data = [
+            {
+                "id": item["id"],
+                "name": item["name"],
+                "date_uploaded": item["date_uploaded"]
+            }
+            for item in serializer.data
+        ]
+
+        return Response(custom_data)
 
 
 class CourseVideoQueryView(generics.CreateAPIView):
@@ -231,9 +248,15 @@ class CourseVideoDetail(generics.RetrieveAPIView):
     def get_object(self):
         course_id = self.kwargs.get("pk")
         video_id = self.kwargs.get("video_id")
+        user = self.request.user
         try:
             instance_course = models.Course.objects.get(pk=course_id)
             instance_video = models.CourseVideo.objects.get(pk=video_id, course_id=course_id)
+            if instance_course.category == "Paid":
+                if user.is_authenticated and user.groups.filter(name=instance_course.name).exists():
+                    return instance_video
+                else:
+                    return None
             return instance_video
         except models.Course.DoesNotExist or models.CourseVideo.DoesNotExist:
             return None

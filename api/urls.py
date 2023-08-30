@@ -2,6 +2,8 @@ from django.urls import path
 from . import views
 from .views import TestCreateView
 
+app_name = "api"
+
 urlpatterns = [
     path('sign-up/', views.UserRegistrationView.as_view(), name='register'),
     path('accounts/profile/', views.UserProfileView.as_view(), name='profile'),
@@ -14,5 +16,5 @@ urlpatterns = [
     path("courses/<int:pk>/delete/", views.CourseDeleteView.as_view()),
     path("courses/<int:pk>/videos/", views.CourseVideosView.as_view()),
     path("courses/<int:pk>/post-video/", views.CourseVideoQueryView.as_view()),
-    path("courses/<int:pk>/videos/<int:video_id>/",views.CourseVideoDetail.as_view())
+    path("courses/<int:pk>/videos/<int:video_id>/", views.CourseVideoDetail.as_view())
 ]
