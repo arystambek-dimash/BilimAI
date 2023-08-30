@@ -12,6 +12,7 @@ urlpatterns = [
     path('chat/history/<int:pk>/delete/', views.ChatHistoryDetailDelete.as_view()),
     path('test/', TestCreateView.as_view(), name='create-test'),
     path('my-tests/', views.TestAll.as_view(), name='all_tests'),
+    path('delete-test/<int:pk>/', views.TestDeleteView.as_view(), name='delete_test'),
     path("courses/", views.CoursesListView.as_view()),
     path("courses/upload/", views.CourseQueryView.as_view()),
     path("courses/<int:pk>/detail", views.CourseDetailView.as_view()),
