@@ -1,12 +1,9 @@
 import os
 import dotenv
-import openai
 import json
-
+from langchain.llms import OpenAI
 
 os.environ["OPENAI_API_KEY"] = dotenv.dotenv_values()["OPENAI_API_KEY"]
-
-openai.api_key = os.environ["OPENAI_API_KEY"]
 
 
 def test_query(my_text: str) -> str:
@@ -14,11 +11,11 @@ def test_query(my_text: str) -> str:
     Using the provided text:
 
         "{my_text}"
-    
+
          you are an expert in creating tests. I am giving you a text for constructing questions and with an answer. 
          generate questions without asking unnecessary questions, just generate questions and return it as a list of 
          objects based on the given text, this is example of response format:
-    
+
         [
         {{
         {{
@@ -30,7 +27,7 @@ def test_query(my_text: str) -> str:
                     "D": "Option D"
               }},
        }},
-    
+
         {{
             "question": "Sample question 2?",
             "options": {{
@@ -46,11 +43,10 @@ def test_query(my_text: str) -> str:
 
     warning: The correct answer should always be on option A    
     """
-    response = openai.Completion.create(engine="text-davinci-003", prompt=prompt, max_tokens=500,n=5,stop=None)
-
-    response_text = response.choices[0]["text"]
+    llm = OpenAI(model_name="gpt-3.5-turbo", n=10, temperature=0)
+    completion = llm(prompt=prompt)
     try:
-        list_of_dicts = json.loads(str(response_text).strip())
+        list_of_dicts = json.loads(completion)
         return list_of_dicts
     except json.JSONDecodeError:
         print("Invalid JSON string")
