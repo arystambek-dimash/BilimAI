@@ -138,9 +138,15 @@ class TestAll(generics.ListAPIView):
         return Test.objects.filter(user=self.request.user)
 
 
-
-
-
+class TestDeleteView(generics.RetrieveDestroyAPIView):
+    serializer_class = TestSerializer
+    permission_classes = [IsAuthenticated]
+    def get_queryset(self):
+        return Test.objects.filter(user=self.request.user)
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'status': 'Test deleted'}, status=status.HTTP_204_NO_CONTENT)
 
 ############################### COURSE ###########################################
 class CoursesListView(generics.ListAPIView):
