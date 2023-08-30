@@ -20,5 +20,5 @@ urlpatterns = [
     path("courses/<int:pk>/videos/post-video/", views.CourseVideoQueryView.as_view()),
     path("courses/<int:pk>/videos/<int:video_id>/", views.CourseVideoDetail.as_view()),
     path("courses/<int:pk>/videos/<int:video_id>/delete/",views.CourseVideoDeleteView.as_view()),
-    path("courses/<int:pk>/videos/<int:video_id>/update/", views.CourseUpdateView.as_view()),
+    path("courses/<int:pk>/videos/<int:video_id>/update/", views.CourseVideoUpdateView.as_view()),
 ]

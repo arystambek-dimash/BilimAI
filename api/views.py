@@ -315,7 +315,7 @@ class CourseVideoDeleteView(generics.RetrieveDestroyAPIView):
         return Response({"status": "U dont have permission to delete the video"})
 
 
-class CourseUpdateView(generics.RetrieveUpdateAPIView):
+class CourseVideoUpdateView(generics.RetrieveUpdateAPIView):
     serializer_class = CourseVideoSerializer
     queryset = models.CourseVideo.objects.all()
     permission_classes = [IsAuthenticated]
