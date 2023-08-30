@@ -61,7 +61,13 @@ class TestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Test
-        fields = ['my_text', 'questions']
+        fields = ['my_text', 'created_date', 'questions']
+
+
+class TestSerializerGET(serializers.ModelSerializer):
+    class Meta:
+        model = Test
+        fields = "__all__"
 
 
 class VideoMaterialSerializer(serializers.ModelSerializer):

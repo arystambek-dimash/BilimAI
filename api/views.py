@@ -10,14 +10,14 @@ from . import models, filter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .serializers import UserRegistrationSerializer, UserProfileSerializer, ChatHistorySerizlizer, \
-    ChatHistorySerizlizerGET, CourseSerializer, CourseVideoSerializer, VideoMaterialSerializer, TestSerializer, \
-    CourseSerializerGET
+    ChatHistorySerizlizerGET, CourseSerializer, CourseVideoSerializer, VideoMaterialSerializer, TestSerializer
 from gpt_config import chat_query
 from gpt_test_config import test_query
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, filters
 from .models import Test, Question, QuestionOption
-from django.contrib.auth.models import Group
-from django.shortcuts import reverse
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
 
 
 ############################### USER ###########################################
@@ -131,7 +131,7 @@ class TestCreateView(generics.CreateAPIView):
 ############################### COURSE ###########################################
 class CoursesListView(generics.ListAPIView):
     queryset = models.Course.objects.all()
-    serializer_class = CourseSerializerGET
+    serializer_class = CourseSerializer
     filter_backends = [filters.SearchFilter, filters.OrderingFilter, django_filters.rest_framework.DjangoFilterBackend]
     search_fields = ["name"]
     ordering_fields = ["price", "name"]
@@ -177,7 +177,7 @@ class CourseQueryView(generics.CreateAPIView):
         return Response({"serializer": serializer.data, "user": request.user.username})
 
 
-class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
+class CourseDeleteView(generics.RetrieveDestroyAPIView):
     queryset = models.Course.objects.all()
     serializer_class = CourseSerializer
     permission_classes = [IsAuthenticated]
@@ -187,47 +187,10 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
         try:
             course = self.queryset.get(pk=pk)
             if self.request.user == course.user:
+                course.delete()
                 return course
         except models.Course.DoesNotExist:
-            return None
-
-    def delete(self, request, *args, **kwargs):
-        course = self.get_object()
-        course.delete()
-        return Response({"status": "successful deleted"})
-
-    def update(self, request, *args, **kwargs):
-        course = self.get_object()
-        course_prev_image = course.img
-        if course:
-            serializer = CourseSerializer(course, data=request.data)
-            if serializer.is_valid():
-                image = request.data.get("img")
-                if image and image != course_prev_image:
-                    image_name = f"{secrets.token_hex(10)}.{image.name.split('.')[-1]}"
-                    image_path = os.path.join("media/images", image_name)
-                    with open(image_path, "wb") as image_file:
-                        for chunk in image.chunks():
-                            image_file.write(chunk)
-                    serializer.validated_data["img"] = image_path.replace("media/", "")
-                else:
-                    serializer.validated_data["img"] = course.img
-                category = request.data.get("category")
-                if category == "Free":
-                    serializer.validated_data["price"] = 0
-                if category == "Paid":
-                    group_name = serializer.validated_data.get("name")
-                    try:
-                        existing_group = Group.objects.get(name=group_name)
-                    except Group.DoesNotExist:
-                        new_group = Group(name=group_name)
-                        new_group.save()
-                serializer.save(user=request.user)
-                return Response(serializer.data)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({"detail": "Course not found."}, status=status.HTTP_404_NOT_FOUND)
+            return
 
 
 ############################### COURSE_VIDEO ###########################################
@@ -297,46 +260,3 @@ class CourseVideoDetail(generics.RetrieveAPIView):
             return instance_video
         except models.Course.DoesNotExist or models.CourseVideo.DoesNotExist:
             return None
-
-
-class CourseVideoDeleteView(generics.RetrieveDestroyAPIView):
-    serializer_class = CourseVideoSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
-        course_id = self.kwargs.get("pk")
-        video_id = self.kwargs.get("video_id")
-
-        course = models.Course.objects.get(pk=course_id)
-        if course.user == self.request.user:
-            video = models.CourseVideo.objects.get(pk=video_id)
-            video.delete()
-            return HttpResponseRedirect(reverse("api:videos", args=(course_id,)))
-        return Response({"status": "U dont have permission to delete the video"})
-
-
-class CourseUpdateView(generics.RetrieveUpdateAPIView):
-    serializer_class = CourseVideoSerializer
-    queryset = models.CourseVideo.objects.all()
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self):
-        course_id = self.kwargs.get("pk")
-        video_id = self.kwargs.get("video_id")
-        course = models.Course.objects.get(pk=course_id)
-        instance_video = models.CourseVideo.objects.get(pk=video_id, course_id=course_id)
-        return instance_video
-
-    def put(self, request, *args, **kwargs):
-        course_id = self.kwargs.get("pk")
-        video_id = self.kwargs.get("video_id")
-        course = models.Course.objects.get(pk=course_id)
-        instance_video = models.CourseVideo.objects.get(pk=video_id, course_id=course_id)
-        if course.user == request.user:
-            mutable_data = request.data.copy()
-            mutable_data['content'] = instance_video.content
-            serializer = CourseVideoSerializer(instance_video, data=mutable_data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data)
-        return Response("You don't have permission to update this video.", status=status.HTTP_403_FORBIDDEN)
