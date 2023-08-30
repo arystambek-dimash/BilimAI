@@ -13,8 +13,10 @@ urlpatterns = [
     path('test/', TestCreateView.as_view(), name='create-test'),
     path("courses/", views.CoursesListView.as_view()),
     path("courses/upload/", views.CourseQueryView.as_view()),
-    path("courses/<int:pk>/delete/", views.CourseDeleteView.as_view()),
-    path("courses/<int:pk>/videos/", views.CourseVideosView.as_view()),
-    path("courses/<int:pk>/post-video/", views.CourseVideoQueryView.as_view()),
-    path("courses/<int:pk>/videos/<int:video_id>/", views.CourseVideoDetail.as_view())
+    path("courses/<int:pk>/detail", views.CourseDetailView.as_view()),
+    path("courses/<int:pk>/videos/", views.CourseVideosView.as_view(),name="videos"),
+    path("courses/<int:pk>/videos/post-video/", views.CourseVideoQueryView.as_view()),
+    path("courses/<int:pk>/videos/<int:video_id>/", views.CourseVideoDetail.as_view()),
+    path("courses/<int:pk>/videos/<int:video_id>/delete/",views.CourseVideoDeleteView.as_view()),
+    path("courses/<int:pk>/videos/<int:video_id>/update/", views.CourseUpdateView.as_view()),
 ]

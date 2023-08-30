@@ -84,3 +84,11 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ["id", "img", "name", "description", "category", "price", "course_videos"]
+
+
+class CourseSerializerGET(serializers.ModelSerializer):
+    course_videos = CourseVideoSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Course
+        fields = "__all__"
