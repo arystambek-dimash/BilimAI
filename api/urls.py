@@ -22,5 +22,6 @@ urlpatterns = [
     path("courses/<int:pk>/videos/<int:video_id>/delete/",views.CourseVideoDeleteView.as_view()),
     path("courses/<int:pk>/videos/<int:video_id>/update/", views.CourseVideoUpdateView.as_view()),
     path('favorites/', FavoriteCourseView.as_view(), name='favorite-course-list'),
+    path('favorites/<int:pk>/', views.FavoriteCourseDeleteView.as_view(), name='favorite-delete'),
 
 ]
