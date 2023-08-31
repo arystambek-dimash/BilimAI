@@ -9,10 +9,7 @@ from rest_framework import generics
 from . import models, filter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .serializers import UserRegistrationSerializer, UserProfileSerializer, ChatHistorySerizlizer, \
-    ChatHistorySerizlizerGET, CourseSerializer, CourseVideoSerializer, VideoMaterialSerializer, TestSerializer, \
-    TestSerializerGET, \
-    CourseSerializerGET, FavoriteCourseSerializer, FavoriteCourseSerializerGET
+from .serializers import *
 from gpt_config import chat_query
 from gpt_test_config import test_query
 from rest_framework import status, filters
@@ -42,9 +39,11 @@ class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         return self.request.user
+
     def update(self, request, *args, **kwargs):
         response = super().update(request, *args, **kwargs)
         return response
+
     def destroy(self, request, *args, **kwargs):
         response = super().destroy(request, *args, **kwargs)
         return response
@@ -249,54 +248,49 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
         serializer = CourseSerializer(course, data=request.data, partial=True)  # Allow partial updates
 
         if serializer.is_valid():
-            image = request.data.get("img")
-            if image and image != course.img:
-                image_name = f"{secrets.token_hex(10)}.{image.name.split('.')[-1]}"
-                image_path = os.path.join("media/images", image_name)
-                with open(image_path, "wb") as image_file:
-                    for chunk in image.chunks():
-                        image_file.write(chunk)
-                serializer.validated_data["img"] = image_path.replace("media/", "")
-            else:
-                serializer.validated_data["img"] = course.img
-
-            category = request.data.get("category")
-            if category == "Free":
-                serializer.validated_data["price"] = 0
-                group_name = serializer.validated_data.get("name")
-                try:
-                    existing_group = Group.objects.get(name=group_name)
-                    existing_group.delete()
-                except Group.DoesNotExist:
-                    pass
-            if category == "Paid":
-                group_name = serializer.validated_data.get("name")
-                try:
-                    existing_group = Group.objects.get(name=group_name)
-                except Group.DoesNotExist:
-                    new_group = Group(name=group_name)
-                    new_group.save()
+            self.process_course_serializer(serializer, request.data)
             serializer.save(user=request.user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['POST'])
-    def upload_image(self, request, pk=None):
-        course = self.get_object()
-        image = request.data.get("img")
+    def process_course_serializer(self, serializer, data):
+        image = data.get("img")
+        category = data.get("category")
+        group_name = serializer.validated_data.get("name")
 
         if image:
-            image_name = f"{secrets.token_hex(10)}.{image.name.split('.')[-1]}"
-            image_path = os.path.join("media/images", image_name)
-            with open(image_path, "wb") as image_file:
-                for chunk in image.chunks():
-                    image_file.write(chunk)
-            course.img = image_path.replace("media/", "")
-            course.save()
-            return Response({"status": "Image uploaded successfully"}, status=status.HTTP_200_OK)
+            self.upload_image(serializer, image)
 
-        return Response({"detail": "No image provided"}, status=status.HTTP_400_BAD_REQUEST)
+        if category == "Free":
+            serializer.validated_data["price"] = 0
+            self.delete_existing_group(group_name)
+        elif category == "Paid":
+            self.create_or_get_group(group_name)
+
+    @staticmethod
+    def upload_image(serializer, image):
+        image_name = f"{secrets.token_hex(10)}.{image.name.split('.')[-1]}"
+        image_path = os.path.join("media/images", image_name)
+        with open(image_path, "wb") as image_file:
+            for chunk in image.chunks():
+                image_file.write(chunk)
+        serializer.validated_data["img"] = image_path.replace("media/", "")
+
+    @staticmethod
+    def create_or_get_group(group_name):
+        try:
+            Group.objects.get(name=group_name)
+        except Group.DoesNotExist:
+            new_group = Group(name=group_name)
+            new_group.save()
+
+    @staticmethod
+    def delete_existing_group(group_name):
+        try:
+            existing_group = Group.objects.get(name=group_name)
+            existing_group.delete()
+        except Group.DoesNotExist:
+            pass
 
 
 ############################### COURSE_VIDEO ###########################################
@@ -305,7 +299,8 @@ class CourseVideosView(generics.ListAPIView):
 
     def get_queryset(self):
         course_id = self.kwargs.get("pk")
-        return models.CourseVideo.objects.filter(course=course_id)
+        course = get_object_or_404(models.Course, pk=course_id)
+        return models.CourseVideo.objects.filter(course=course)
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -440,3 +435,19 @@ class FavoriteCourseDeleteView(generics.RetrieveDestroyAPIView):
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+############################### COURSE_VIDEO ###########################################
+
+
+class PayCourseView(generics.ListAPIView):
+    serializer_class = BuyCourseSerializerGET
+    queryset = models.BuyCourse.objects.all()
+
+    def get_queryset(self):
+        course = get_object_or_404(models.Course, pk=self.kwargs.get("pk"))
+        return models.BuyCourse.objects.filter(user=self.request.user, course=course)
+
+
+class PayCourseQueryView(generics.CreateAPIView):
+    serializer_class = BuyCourseSerializerPOST
+    queryset = models.BuyCourse.objects.all()

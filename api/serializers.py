@@ -1,6 +1,8 @@
 from django.contrib.auth.models import User
-from .models import ChatHistory, Test, Question, QuestionOption, Course, CourseVideo, VideoMaterial, FavoriteCourse
+from .models import ChatHistory, Test, Question, QuestionOption, Course, CourseVideo, VideoMaterial, FavoriteCourse, \
+    BuyCourse
 from rest_framework import serializers
+from phonenumber_field.formfields import PhoneNumberField
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -86,10 +88,11 @@ class CourseVideoSerializer(serializers.ModelSerializer):
 
 class CourseSerializer(serializers.ModelSerializer):
     course_videos = CourseVideoSerializer(many=True, read_only=True)
+    kaspi_gold = PhoneNumberField()
 
     class Meta:
         model = Course
-        fields = ["id", "img", "name", "description", "category", "price", "course_videos"]
+        fields = ["id", "img", "name", "description", "category", "price", "kaspi_gold", "course_videos"]
 
 
 class CourseSerializerGET(serializers.ModelSerializer):
@@ -99,15 +102,26 @@ class CourseSerializerGET(serializers.ModelSerializer):
         model = Course
         fields = "__all__"
 
-class FavoriteCourseSerializer(serializers.ModelSerializer):
 
+class FavoriteCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = FavoriteCourse
         fields = ['id', 'course']
 
 
 class FavoriteCourseSerializerGET(serializers.ModelSerializer):
-
     class Meta:
         model = FavoriteCourse
+        fields = "__all__"
+
+
+class BuyCourseSerializerPOST(serializers.ModelSerializer):
+    class Meta:
+        model = BuyCourse
+        fields = ["purchase_receipt", "purchase_date"]
+
+
+class BuyCourseSerializerGET(serializers.ModelSerializer):
+    class Meta:
+        model = BuyCourse
         fields = "__all__"
