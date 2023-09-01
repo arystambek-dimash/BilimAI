@@ -2,9 +2,8 @@ import os
 import secrets
 
 import django_filters
-from django.contrib.auth.models import User
-from django.http import HttpResponseRedirect
-from rest_framework.decorators import permission_classes
+from django.http import HttpResponseRedirect, Http404
+from rest_framework.decorators import permission_classes, api_view
 from rest_framework import generics
 from . import models, filter
 from rest_framework.permissions import IsAuthenticated
@@ -15,9 +14,8 @@ from gpt_test_config import test_query
 from rest_framework import status, filters
 from .models import Test, Question, QuestionOption, FavoriteCourse
 from django.contrib.auth.models import Group
-from django.shortcuts import reverse
+from django.shortcuts import reverse, redirect
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import action
 
 
 ############################### USER ###########################################
@@ -70,14 +68,14 @@ class ChatQueryView(generics.CreateAPIView):
 
 
 class ChatHistoryAll(generics.ListAPIView):
-    queryset = models.ChatHistory.objects.all()
+    queryset = models.ChatHistory.objects.order_by("-created_date")
     serializer_class = ChatHistorySerizlizerGET
     permission_classes([IsAuthenticated])
 
     def list(self, request, *args, **kwargs):
         user = self.request.user
         if user.is_authenticated:
-            queryset = models.ChatHistory.objects.filter(user=user)
+            queryset = models.ChatHistory.objects.filter(user=user).order_by("-created_date")
             serializer = self.get_serializer(queryset, many=True)
             return Response(serializer.data)
         else:
@@ -444,10 +442,38 @@ class PayCourseView(generics.ListAPIView):
     queryset = models.BuyCourse.objects.all()
 
     def get_queryset(self):
-        course = get_object_or_404(models.Course, pk=self.kwargs.get("pk"))
-        return models.BuyCourse.objects.filter(user=self.request.user, course=course)
+        return models.BuyCourse.objects.filter(course__user=self.request.user)
 
 
 class PayCourseQueryView(generics.CreateAPIView):
     serializer_class = BuyCourseSerializerPOST
     queryset = models.BuyCourse.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        course = get_object_or_404(Course, pk=self.kwargs.get("pk"))
+        if serializer.is_valid():
+            buy_course = serializer.save(user=request.user, course=course)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def access_view(request, purchase_id):
+    purchase = get_object_or_404(BuyCourse, pk=purchase_id)
+
+    if request.user == purchase.course.user:
+        if purchase.course.category == "Paid":
+            try:
+                group = Group.objects.get(name=purchase.course.name)
+                request.user.groups.add(group)
+                if request.user.has_perm(group.name):
+                    purchase.delete()
+                return redirect("api:purchases")
+            except Group.DoesNotExist:
+                raise Http404("Group not found with such name")
+
+    return redirect("api:courses")

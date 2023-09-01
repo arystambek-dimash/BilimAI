@@ -118,7 +118,7 @@ class FavoriteCourseSerializerGET(serializers.ModelSerializer):
 class BuyCourseSerializerPOST(serializers.ModelSerializer):
     class Meta:
         model = BuyCourse
-        fields = ["purchase_receipt", "purchase_date"]
+        fields = ["name", "summa"]
 
 
 class BuyCourseSerializerGET(serializers.ModelSerializer):

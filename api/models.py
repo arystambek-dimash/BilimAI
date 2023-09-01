@@ -2,6 +2,7 @@ from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.contrib.auth.models import User
 from phonenumber_field.modelfields import PhoneNumberField
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 CHOICES = (
     ("Free", "Free"),
@@ -41,7 +42,10 @@ class Course(models.Model):
     name = models.CharField(null=False, max_length=255)
     description = models.TextField()
     category = models.CharField(max_length=4, choices=CHOICES)
-    price = models.IntegerField(default=0)
+    price = models.IntegerField(validators=[
+        MinValueValidator(10),
+        MaxValueValidator(10000),
+    ])
     created_data = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     kaspi_gold = PhoneNumberField(null=True)
@@ -76,7 +80,13 @@ class BuyCourse(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     purchase_date = models.DateTimeField(auto_now_add=True)
-    purchase_receipt = models.ImageField(upload_to="purchase_receipts/", null=False)
+    name = models.CharField(max_length=50)
+    summa = models.IntegerField(
+        validators=[
+            MinValueValidator(10),
+            MaxValueValidator(10000),
+        ]
+    )
 
     def __str__(self):
         return f"{self.user.username} purchased {self.course.name} on {self.purchase_date}"
