@@ -96,3 +96,10 @@ class MyCourse(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     added_date = models.DateTimeField(auto_now_add=True)
+
+
+class CourseImage(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='images/', null=False)
+    description = models.TextField(blank=True, null=True)
+    upload_date = models.DateTimeField(auto_now_add=True)

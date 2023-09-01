@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ChatHistory, Test, Question, QuestionOption,Course,CourseVideo,VideoMaterial, FavoriteCourse, MyCourse
+from .models import ChatHistory, Test, Question, QuestionOption,Course,CourseVideo,VideoMaterial, FavoriteCourse, MyCourse, CourseImage, BuyCourse
 # Register your models here.
 
 
@@ -12,3 +12,5 @@ admin.site.register(CourseVideo)
 admin.site.register(VideoMaterial)
 admin.site.register(FavoriteCourse)
 admin.site.register(MyCourse)
+admin.site.register(CourseImage)
+admin.site.register(BuyCourse)

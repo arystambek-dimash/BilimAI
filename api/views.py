@@ -518,3 +518,47 @@ class MyCourseView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     def get_queryset(self):
         return MyCourse.objects.filter(user=self.request.user)
+
+
+
+
+class CourseImageQueryView(generics.CreateAPIView):
+    serializer_class = CourseImageSerializer
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        course = get_object_or_404(models.Course, pk=kwargs.get("pk"))
+        if course.user == request.user:
+            serializer = CourseImageSerializer(data=request.data)
+            if serializer.is_valid():
+                image = request.data.get("image")
+                image_name = f"{secrets.token_hex(5)}.{image.name.split('.')[-1]}"
+                image_path = os.path.join("media/", image_name)
+                os.makedirs(os.path.dirname("media/"), exist_ok=True)
+                with open(image_path, "wb") as image_file:
+                    for chunk in image.chunks():
+                        image_file.write(chunk)
+                serializer.validated_data["image"] = image_path.replace("media/", "")
+                serializer.save(course=course)
+                return Response(serializer.data)
+            return Response({"valid formats": ['JPEG', 'JPG', 'PNG', 'GIF']},
+                            status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response("You don't have permission to upload this image.", status=status.HTTP_403_FORBIDDEN)
+
+
+class CourseImageView(generics.ListAPIView):
+    serializer_class = CourseImageSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        course_id = self.kwargs.get("pk")
+        course = get_object_or_404(Course, pk=course_id)
+        if course.category == "Paid":
+            if BuyCourse.objects.filter(user=self.request.user, course=course).exists() or \
+                    course.user == self.request.user:
+                return CourseImage.objects.filter(course=course)
+            else:
+                return None
+        return CourseImage.objects.filter(course=course)
+

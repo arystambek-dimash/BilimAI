@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from .models import ChatHistory, Test, Question, QuestionOption, Course, CourseVideo, VideoMaterial, FavoriteCourse, \
-    BuyCourse, MyCourse
+    BuyCourse, MyCourse, CourseImage
 from rest_framework import serializers
 from phonenumber_field.formfields import PhoneNumberField
 
@@ -85,14 +85,19 @@ class CourseVideoSerializer(serializers.ModelSerializer):
         model = CourseVideo
         fields = ["id", "name", "content", "date_uploaded", "course_video"]
 
+class CourseImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CourseImage
+        fields = ["id", "image", "upload_date", "description"]
 
 class CourseSerializer(serializers.ModelSerializer):
+    image_course = CourseImageSerializer(many=True, read_only=True)
     course_videos = CourseVideoSerializer(many=True, read_only=True)
     kaspi_gold = PhoneNumberField()
 
     class Meta:
         model = Course
-        fields = ["id", "img", "name", "description", "category", "price", "kaspi_gold", "course_videos"]
+        fields = ["id", "img", "name", "description", "category", "price", "kaspi_gold", "course_videos", "image_course"]
 
 
 class CourseSerializerGET(serializers.ModelSerializer):
@@ -135,3 +140,6 @@ class MyCourseSerializerGET(serializers.ModelSerializer):
     class Meta:
         model = MyCourse
         fields = "__all__"
+
+
+

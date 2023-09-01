@@ -29,5 +29,7 @@ urlpatterns = [
     path('add-courses/', AddCourseToMyCourse.as_view(), name='add_courses'),
     path('my-courses/', MyCourseView.as_view(), name='my-course-list'),
     path('my-courses/<int:pk>/', views.FavoriteCourseDeleteView.as_view(), name='my-course-delete'),
+    path("courses/<int:pk>/images/post/", views.CourseImageQueryView.as_view(),name='upload-images' ),
+    path("courses/<int:pk>/images/", views.CourseImageView.as_view(), name="videos"),
 
 ]
