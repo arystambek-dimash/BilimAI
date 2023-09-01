@@ -1,5 +1,4 @@
 import requests
-from bs4 import BeautifulSoup
 from googlesearch import search
 import certifi
 
@@ -11,7 +10,7 @@ def get_link(question):
     for link in search_results:
         try:
             response = requests.get(link, verify=certifi.where())
-            if response.status_code == 200:
+            if response.status_code == 200 and "pdf" not in link:
                 valid_links.append(link)
         except requests.exceptions.SSLError as e:
            pass
