@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from .models import ChatHistory, Test, Question, QuestionOption, Course, CourseVideo, VideoMaterial, FavoriteCourse, \
-    BuyCourse
+    BuyCourse, MyCourse
 from rest_framework import serializers
 from phonenumber_field.formfields import PhoneNumberField
 
@@ -124,4 +124,14 @@ class BuyCourseSerializerPOST(serializers.ModelSerializer):
 class BuyCourseSerializerGET(serializers.ModelSerializer):
     class Meta:
         model = BuyCourse
+        fields = "__all__"
+
+class MyCourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MyCourse
+        fields = ['id', 'course']
+
+class MyCourseSerializerGET(serializers.ModelSerializer):
+    class Meta:
+        model = MyCourse
         fields = "__all__"

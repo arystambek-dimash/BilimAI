@@ -477,3 +477,44 @@ def access_view(request, purchase_id):
                 raise Http404("Group not found with such name")
 
     return redirect("api:courses")
+
+
+
+class AddCourseToMyCourse(generics.CreateAPIView):
+    queryset = FavoriteCourse.objects.all()
+    serializer_class = MyCourseSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return MyCourse.objects.filter(user=user)
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        course_id = self.request.data.get('course')
+        course = Course.objects.get(id=course_id)
+        is_my_course = MyCourse.objects.filter(user=user, course=course).exists()
+        if is_my_course:
+            raise Exception("This course is already in My Course")
+        if course.category == "Paid":
+            bought_course = BuyCourse.objects.filter(user=user, course=course).exists()
+            if not bought_course:
+                raise Exception("This course is not purchased")
+        serializer.save(user=self.request.user, course=course)
+
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class MyCourseView(generics.ListAPIView):
+    serializer_class = MyCourseSerializerGET
+    permission_classes = [IsAuthenticated]
+    def get_queryset(self):
+        return MyCourse.objects.filter(user=self.request.user)
