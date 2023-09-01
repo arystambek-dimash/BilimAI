@@ -1,6 +1,7 @@
+import json
 import os, dotenv
 import nest_asyncio
-from langchain.document_loaders import WebBaseLoader
+from langchain.document_loaders import WebBaseLoader,JSONLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.chains import RetrievalQA
 from langchain.embeddings import OpenAIEmbeddings
@@ -8,12 +9,59 @@ from langchain.chat_models import ChatOpenAI
 from langchain.vectorstores import Chroma
 from langchain.prompts import ChatPromptTemplate
 from links import get_link
+import sqlite3 as sq
 
 nest_asyncio.apply()
 os.environ["OPENAI_API_KEY"] = dotenv.dotenv_values()["OPENAI_API_KEY"]
 
 
 def chat_query(question: str):
+    if ("courses" in question or "course" in question) and "nfactorial" not in question:
+        try:
+            sqliteConnection = sq.connect('db.sqlite3')
+            cursor = sqliteConnection.cursor()
+            cursor.execute("SELECT name, description, price FROM api_course")
+            datas = cursor.fetchall()
+            if datas:
+                json_loader_list = []
+                for data in datas:
+                    json_loader_list.append({'courses':[{
+                        "name_course":data[0],
+                        "course_description":data[1],
+                        "course_price":data[2]
+                    }]})
+                json_loader = json.dumps(json_loader_list)
+                with open("courses/courses.json", "w") as f:
+                    f.write(json_loader.replace("[","").replace("]",""))
+                loader = JSONLoader(
+                    file_path='courses/courses.json',
+                    jq_schema='.',
+                    text_content=False)
+                docs = loader.load()
+                embeddings = OpenAIEmbeddings()
+                docsearch = Chroma.from_documents(docs, embeddings)
+                retriever = docsearch.as_retriever(search_kwargs={"k": 3})
+
+                llm = ChatOpenAI()
+                qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever)
+                response = qa(question)
+                return response["result"]
+        except sq.DatabaseError as e:
+            pass
+    elif ("courses" in question or "course" in question) and "nfactorial" in question:
+        loader = WebBaseLoader(
+            ["https://www.nfactorial.school/"]
+        )
+        docs = loader.load()
+        embeddings = OpenAIEmbeddings()
+        docsearch = Chroma.from_documents(docs, embeddings)
+        retriever = docsearch.as_retriever(search_kwargs={"k": 3})
+
+        llm = ChatOpenAI(model_name="gpt-3.5-turbo-16k-0613")
+        qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever)
+
+        response = qa(question)
+        return response["result"]
     loader = WebBaseLoader(
         get_link(question)
     )
@@ -47,4 +95,3 @@ def chat_query(question: str):
 
     response = qa(question[0].content)
     return response["result"]
-
