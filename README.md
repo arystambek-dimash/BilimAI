@@ -1,27 +1,91 @@
-# BilimAI
+# Django Application
 
-_**This is an application for finding information about UNT and universities, creating tests from a given text**_
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/WleFVe?referralCode=UBd_g_)
 
-***
-# Project Launch
+This is a Django template that includes:
 
-**Install dependencies:**
+- SQLite as a database
+- Dockerfile files for easy deployment
+- Configuration of the CORS middleware
 
->_poetry install_
-***
+## 📚 Features
 
-**Enter the poetry environment:**
+1. User registration.
+2. User authentication and token creation.
+3. User verification and token validation.
+4. Encrypted password management.
 
->_poetry shell_
-***
+## 🚀 Quick Start
 
-__Launch Django-application.__
+You'll need Docker and Docker Compose to run this application.
 
->_python manage.py runserver_
-> or
-> python3
-***
+1. Build the project
 
-# Project urls
-> https://docs.google.com/document/d/1e58WZO-eDam1U5WiRLcy2j4gV-TWIMl4LNfaeiJqidA/edit?usp=sharing
-***
+```bash
+docker-compose build
+```
+
+2. Start the project
+
+```bash
+docker-compose up -d
+```
+
+3. Watch logs
+
+```bash
+docker-compose logs -f app
+```
+
+This command will start the Django server on port 8000.
+You can navigate to `http://localhost:8000/api` in your browser to access the automatically generated API documentation.
+
+## 📚 Project Structure
+
+
+__Authentication:__
+
+- `POST /api/auth/login/`: User can log in to the application.
+- `POST /api/sign-up/`: User can register a new account.
+
+__Chat:__
+
+- `GET /api/chat/`: User can access the chat interface powered by GPT.
+
+__Test:__
+
+- `POST /api/tests/`: Create a new test.
+- `DELETE /api/test/detail/<int:pk>/delete/:` Delete a specific test.
+- `GET /api/test/detail/<int:pk>/`: View details of a specific test.
+
+__Favorites:__
+
+- `GET /api/favorites/`: View a list of favorited items.
+- `DELETE /api/favorites/<int:pk>/delete/`: Remove an item from favorites.
+
+__History:__
+
+- `GET /api/history/`: View a list of chat history entries.
+- `DELETE /api/history/<int:pk>/delete/`: Delete a specific chat history entry.
+
+__Course:__
+
+- `GET /api/courses/`: View a list of available courses.
+- `POST /api/courses/<int:pk>/save-to-favorites/`: Save a course to favorites.
+- `POST /api/courses/upload/`: Add a new course.
+- `DELETE /api/courses/<int:pk>/detail/`: Delete or update a specific course.
+- `GET /api/courses/<int:pk>/videos/`: View all videos for a specific course.
+- `POST /api/courses/<int:pk>/videos/post-video/`: Post a new video for a course.
+- `GET /api/courses/<int:pk>/videos/<int:pk>/`: View details of a specific video for a course.
+- `POST /api/courses/<int:pk>/video/<int:pk>/update/`: Update details of a specific video for a course.
+- `DELETE /api/courses/<int:pk>/post/video/<int:pk>/delete/`: Delete a specific video for a course.
+- `GET /api/courses/<int:pk>/post/video/<int:pk>/materials/`: View all materials related to a specific video.
+- `POST /api/courses/<int:pk>/post/video/<int:pk>/materials/<int:pk>/update/`: Update details of video materials.
+- `DELETE /api/courses/<int:pk>/post/video/<int:pk>/materials/<int:pk>/delete/`: Delete video materials.
+## ⚙️ Local Development
+
+```
+poetry install
+poetry shell
+sh ./entrypoint.sh
+```
