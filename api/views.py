@@ -561,3 +561,32 @@ class CourseImageView(generics.ListAPIView):
             else:
                 return None
         return CourseImage.objects.filter(course=course)
+
+class CourseImageDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = CourseImageSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_url_kwarg = "image_pk"
+
+    def get_course(self):
+        return get_object_or_404(Course, pk=self.kwargs.get("pk"))
+    def has_permission_to_access(self, course):
+        return self.request.user == course.user
+    def get_queryset(self):
+        course = self.get_course()
+        if not self.has_permission_to_access(course):
+            return CourseImage.objects.none()
+        return CourseImage.objects.filter(course=course)
+    def get_object(self):
+        return get_object_or_404(self.get_queryset(), pk=self.kwargs.get(self.lookup_url_kwarg))
+    def retrieve(self, request, *args, **kwargs):
+        if not self.get_queryset().exists():
+            return Response({"error": "You do not have permission to access this image"}, status=status.HTTP_403_FORBIDDEN)
+        return super().retrieve(request, *args, **kwargs)
+    def update(self, request, *args, **kwargs):
+        if not self.get_queryset().exists():
+            return Response({"error": "You do not have permission to update this image"}, status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)
+    def destroy(self, request, *args, **kwargs):
+        if not self.get_queryset().exists():
+            return Response({"error": "You do not have permission to delete this image"}, status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)

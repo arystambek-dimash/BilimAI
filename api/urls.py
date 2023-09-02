@@ -28,8 +28,8 @@ urlpatterns = [
     path('favorites/<int:pk>/', views.FavoriteCourseDeleteView.as_view(), name='favorite-delete'),
     path('add-courses/', AddCourseToMyCourse.as_view(), name='add_courses'),
     path('my-courses/', MyCourseView.as_view(), name='my-course-list'),
-    path('my-courses/<int:pk>/', views.FavoriteCourseDeleteView.as_view(), name='my-course-delete'),
     path("courses/<int:pk>/materials/images/post/", views.CourseImageQueryView.as_view(),name='upload-images' ),
     path("courses/<int:pk>/materials/images/", views.CourseImageView.as_view(), name="materials"),
+    path('courses/<int:pk>/materials/images/<int:image_pk>/', views.CourseImageDetailView.as_view(), name="image-detail")
 
 ]
