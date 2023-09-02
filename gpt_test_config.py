@@ -1,9 +1,11 @@
 import os
-import dotenv
 import json
 from langchain.llms import OpenAI
+from  dotenv import load_dotenv
 
-os.environ["OPENAI_API_KEY"] = dotenv.dotenv_values()["OPENAI_API_KEY"]
+load_dotenv()
+
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 
 
 def test_query(my_text: str) -> str:

@@ -1,5 +1,5 @@
 import json
-import os, dotenv
+import os
 import nest_asyncio
 from langchain.document_loaders import WebBaseLoader, JSONLoader
 from langchain.text_splitter import CharacterTextSplitter
@@ -10,9 +10,12 @@ from langchain.vectorstores import Chroma
 from langchain.prompts import ChatPromptTemplate
 from links import get_link
 import sqlite3 as sq
+from dotenv import load_dotenv
+
+load_dotenv()
 
 nest_asyncio.apply()
-os.environ["OPENAI_API_KEY"] = dotenv.dotenv_values()["OPENAI_API_KEY"]
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 
 
 def nfacotiral(question):
@@ -47,10 +50,8 @@ def chat_query(question: str):
                         "course_price": data[2]
                     }]})
                 json_loader = json.dumps(json_loader_list)
-                if not os.path.exists("courses"):
-                    os.makedirs("courses")
                 with open("courses/courses.json", "w") as f:
-                    f.write(json_loader)
+                    f.write(json_loader.replace("[", "").replace("]", ""))
                 loader = JSONLoader(
                     file_path='courses/courses.json',
                     jq_schema='.',
