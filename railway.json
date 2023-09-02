@@ -3,8 +3,9 @@
     "build": {
         "builder": "DOCKERFILE",
         "watchPatterns": [
-            "/app/*.py",
-            "/app/**/*.py",
+            "/api/*.py",
+            "/api/**/*.py",
+            "/bilim_ai/*.py",
             "/Dockerfile",
             "/pyproject.toml"
         ]
