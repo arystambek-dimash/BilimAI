@@ -47,6 +47,7 @@ __Authentication:__
 
 - `POST /api/auth/login/`: User can log in to the application.
 - `POST /api/sign-up/`: User can register a new account.
+- `GET UPDATE DELETE /api/accounts/profile/`: User Profile 
 
 __Chat:__
 
@@ -54,9 +55,9 @@ __Chat:__
 
 __Test:__
 
-- `POST /api/tests/`: Create a new test.
-- `DELETE /api/test/detail/<int:pk>/delete/:` Delete a specific test.
-- `GET /api/test/detail/<int:pk>/`: View details of a specific test.
+- `POST /api/test/`: Create a new test.
+- `DELETE /api/test/my-tests/<int:pk>/detail/:` Delete a specific test.
+- `GET /api/test/my-tests/`: View All My Test List.
 
 __Favorites:__
 
@@ -71,7 +72,6 @@ __History:__
 __Course:__
 
 - `GET /api/courses/`: View a list of available courses.
-- `POST /api/courses/<int:pk>/save-to-favorites/`: Save a course to favorites.
 - `POST /api/courses/upload/`: Add a new course.
 - `DELETE /api/courses/<int:pk>/detail/`: Delete or update a specific course.
 - `GET /api/courses/<int:pk>/videos/`: View all videos for a specific course.
@@ -82,6 +82,13 @@ __Course:__
 - `GET /api/courses/<int:pk>/post/video/<int:pk>/materials/`: View all materials related to a specific video.
 - `POST /api/courses/<int:pk>/post/video/<int:pk>/materials/<int:pk>/update/`: Update details of video materials.
 - `DELETE /api/courses/<int:pk>/post/video/<int:pk>/materials/<int:pk>/delete/`: Delete video materials.
+- `POST /add-courses/`: Add courses to MyCourse.
+- `GET /api/my-courses/`: View a list of MyCourses.
+- `POST /api/courses/<int:pk>/materials/images/post/`: Upload image to Course.
+- `GET /api/courses/<int:pk>/materials/images/`: View List of Images.
+- `DELETE PUT /api/courses/<int:pk>/materials/images/<int:image_pk>/`: Delete Update Image.
+
+]
 ## ⚙️ Local Development
 
 ```
