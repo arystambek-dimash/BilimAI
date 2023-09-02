@@ -442,7 +442,7 @@ class PayCourseView(generics.ListAPIView):
     queryset = models.BuyCourse.objects.all()
 
     def get_queryset(self):
-        return models.BuyCourse.objects.filter(course__user=self.request.user)
+        return models.BuyCourse.objects.filter(course__user=self.request.user,hidden=False)
 
 
 class PayCourseQueryView(generics.CreateAPIView):
@@ -468,16 +468,17 @@ def access_view(request, purchase_id):
     if request.user == purchase.course.user:
         if purchase.course.category == "Paid":
             try:
-                group = Group.objects.get(name=purchase.course.name)
-                request.user.groups.add(group)
-                if request.user.has_perm(group.name):
-                    purchase.delete()
+                group = Group.objects.get(name=purchase.course.name.strip())
+                purchase.user.groups.add(group)
+                purchase.user.save()
+                if purchase.user.groups.filter(name=purchase.course.name).exists():
+                    purchase.hidden = True
+                    purchase.save()
                 return redirect("api:purchases")
             except Group.DoesNotExist:
                 raise Http404("Group not found with such name")
 
     return redirect("api:courses")
-
 
 
 class AddCourseToMyCourse(generics.CreateAPIView):
@@ -516,10 +517,9 @@ class AddCourseToMyCourse(generics.CreateAPIView):
 class MyCourseView(generics.ListAPIView):
     serializer_class = MyCourseSerializerGET
     permission_classes = [IsAuthenticated]
+
     def get_queryset(self):
         return MyCourse.objects.filter(user=self.request.user)
-
-
 
 
 class CourseImageQueryView(generics.CreateAPIView):
@@ -561,4 +561,3 @@ class CourseImageView(generics.ListAPIView):
             else:
                 return None
         return CourseImage.objects.filter(course=course)
-

@@ -47,8 +47,10 @@ def chat_query(question: str):
                         "course_price": data[2]
                     }]})
                 json_loader = json.dumps(json_loader_list)
+                if not os.path.exists("courses"):
+                    os.makedirs("courses")
                 with open("courses/courses.json", "w") as f:
-                    f.write(json_loader.replace("[", "").replace("]", ""))
+                    f.write(json_loader)
                 loader = JSONLoader(
                     file_path='courses/courses.json',
                     jq_schema='.',

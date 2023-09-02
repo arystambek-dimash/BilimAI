@@ -51,6 +51,9 @@ class Course(models.Model):
     kaspi_gold = PhoneNumberField(null=True)
 
 
+    def __str__(self):
+        return self.name
+
 class CourseVideo(models.Model):
     name = models.CharField(max_length=255, null=False)
     content = models.FileField(upload_to="videos/", null=False,
@@ -61,6 +64,8 @@ class CourseVideo(models.Model):
     date_uploaded = models.DateTimeField(auto_now_add=True)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return self.name
 
 class VideoMaterial(models.Model):
     file = models.FileField(upload_to="materials/", null=True,
@@ -76,11 +81,13 @@ class FavoriteCourse(models.Model):
         unique_together = ('user', 'course',)
 
 
+
 class BuyCourse(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     purchase_date = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=50)
+    hidden = models.BooleanField(default=False)
     summa = models.IntegerField(
         validators=[
             MinValueValidator(10),
@@ -97,9 +104,15 @@ class MyCourse(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     added_date = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"{self.course.name} {self.user.username}"
+
 
 class CourseImage(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     image = models.ImageField(upload_to='images/', null=False)
     description = models.TextField(blank=True, null=True)
     upload_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.course.name} image"
