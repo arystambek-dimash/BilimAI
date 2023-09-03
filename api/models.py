@@ -42,7 +42,7 @@ class Course(models.Model):
     name = models.CharField(null=False, max_length=255)
     description = models.TextField()
     category = models.CharField(max_length=4, choices=CHOICES)
-    price = models.IntegerField(validators=[
+    price = models.IntegerField(null=True,validators=[
         MinValueValidator(10),
         MaxValueValidator(10000),
     ])
