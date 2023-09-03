@@ -7,6 +7,8 @@ import sys
 def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bilim_ai.settings')
+    if not os.path.exists("static/"):
+        os.makedirs("static/")
     media_dir = "media/"
     if not os.path.exists(media_dir):
         os.makedirs(media_dir)
